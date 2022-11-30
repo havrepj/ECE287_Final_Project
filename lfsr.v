@@ -13,7 +13,7 @@ module lfsr(out, clk, rst);
 			if(rst) 
 				out = 2'b0;
 			else
-				out = {out[2:0], fb};
+				out = {out[1:0], fb};
 		
 		end
 		
