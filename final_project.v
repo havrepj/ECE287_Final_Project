@@ -9,17 +9,16 @@ module final_project(
 	input button4,
 	output reg [3:0] lights,
 	output reg done,
-	output reg [6:0]sevsegpoint,
-	output reg [6:0]sevseglives
+	output reg [6:0]sevsegones,
+	output reg [6:0]sevsegtens
 );
 
 reg [3:0] S;
 reg [3:0] NS;
-reg [1:0]set_point_or_life;
+reg [1:0]give_lose_point;
 wire [3:0]random_gen;
 reg [1:0]random_num;
 reg [3:0] point;
-reg [3:0] lives;
 reg start_checks;
 reg start_clock;
 reg clock_done;
@@ -35,8 +34,8 @@ parameter START = 4'b0000,
 			 
 			 
 lfsr random_num_gen(random_gen, clk, rst);			 
-check_hit checker(random_num, start_checks, clk, button1, button2, button3, button4, lights, set_point_or_life);
-//timer timing(clk, start_clock, clock_done, time_light);
+check_hit checker(random_num, start_checks, clk, button1, button2, button3, button4, lights, give_lose_point);
+timer timing(clk, start_clock, clock_done);
 
 
 always @(posedge clk or posedge rst)
@@ -65,23 +64,21 @@ always@(*)
 				NS = Wait;
 			Wait:
 				begin
-					if(set_point_or_life == 2'b11)
+					if(give_lose_point == 2'b11)
 						NS = hit;
-					else if (set_point_or_life == 2'b01)
+					else if (give_lose_point == 2'b01 | clock_done == 1'b1)
 						NS = missed;
 				end
 			hit:
 				begin
-					//if(point == 2'd10)
-					//	NS = finish;
-					//else
+					if(point == 2'd10)
+						NS = finish;
+					else
 						NS = Gen_Num;
 				end
 			missed:
 				begin
-				//	if(lives == 1'd0)
-				//		NS = finish;
-				//	else
+
 						NS = Gen_Num;
 				end
 			finish:
@@ -99,7 +96,6 @@ always@(posedge clk or posedge rst)
 		if(rst == 1'b1)
 			begin
 				point = 4'b0000;
-				lives = 4'b0011;
 			end
 			
 		case(S)
@@ -113,19 +109,19 @@ always@(posedge clk or posedge rst)
 				Wait:
 					begin
 						start_checks = 1'b1;
-						//start_clock = 1'b1;
+						start_clock = 1'b1;
 					end
 				hit:
 					begin
-						point = point + 4'b0001;
+						point = point + 1'd1;
 						start_checks = 1'b0;
-						//start_clock = 1'b0;
+						start_clock = 1'b0;
 					end
 				missed:
 					begin
-						lives = lives - 4'b0001;
+						//point = point - 1'd1;
 						start_checks = 1'b0;
-						//start_clock = 1'b0;
+						start_clock = 1'b0;
 					end
 				finish:
 					begin
@@ -139,9 +135,9 @@ always@(posedge clk or posedge rst)
 			
 	end
 	
-seven_segment points(point, sevsegpoint);
-seven_segment life(lives, sevseglives);
-	
+seven_segment ones(point%10, sevsegones);
+seven_segment tens(point/10, sevsegtens);
+
 	
 	
 endmodule
