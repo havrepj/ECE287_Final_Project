@@ -15,7 +15,8 @@ module final_project(
 
 reg [3:0] S;
 reg [3:0] NS;
-reg [1:0]give_lose_point;
+reg give_point;
+reg lose_point;
 wire [3:0]random_gen;
 reg [1:0]random_num;
 reg [3:0] point;
@@ -30,13 +31,15 @@ parameter START = 4'b0000,
 			 hit = 4'b0011,
 			 missed = 4'b0100,
 			 finish = 4'b0101,
-			 real_start = 4'b0111;
+			 real_start = 4'b0111,
+			 reset_state = 4'b1000;
 			 
 			 
 lfsr random_num_gen(random_gen, clk, rst);			 
-check_hit checker(random_num, start_checks, clk, button1, button2, button3, button4, lights, give_lose_point);
+check_hit checker(random_num, start_checks, clk, button1, button2, button3, button4, lights, give_point, lose_point, clock_done);
 timer timing(clk, start_clock, clock_done);
-
+seven_segment ones(point%10, sevsegones);
+seven_segment tens(point/10, sevsegtens);
 
 always @(posedge clk or posedge rst)
 begin
@@ -64,28 +67,34 @@ always@(*)
 				NS = Wait;
 			Wait:
 				begin
-					if(give_lose_point == 2'b11)
+					if(give_point == 1'b1)
 						NS = hit;
-					else if (give_lose_point == 2'b01 | clock_done == 1'b1)
+					else if (lose_point == 1'b1)
 						NS = missed;
 				end
 			hit:
 				begin
-					if(point == 2'd10)
-						NS = finish;
-					else
-						NS = Gen_Num;
+					//if(point == 2'd10)
+					//	NS = finish;
+					//else
+						NS = reset_state;
 				end
 			missed:
 				begin
 
-						NS = Gen_Num;
+						NS = reset_state;
 				end
 			finish:
 				begin
 				end
 			real_start:
+				begin
 					NS = Gen_Num;
+				end
+			reset_state:
+				begin
+					NS = Gen_Num;
+				end
 		endcase
 	end
 	
@@ -93,35 +102,32 @@ always@(*)
 always@(posedge clk or posedge rst)
 
 	begin
-		if(rst == 1'b1)
-			begin
-				point = 4'b0000;
-			end
 			
 		case(S)
 				START:
 					begin 
+						point <= 4'b0000;
+						start_checks <= 1'b0;
+						start_clock <= 1'b0;
+						done <= 1'b0;
 					end
 				Gen_Num:
 					begin
-						random_num = random_gen[1:0];
+						random_num <= random_gen[1:0];
+
 					end
 				Wait:
 					begin
-						start_checks = 1'b1;
-						start_clock = 1'b1;
+						start_checks <= 1'b1;
+						start_clock <= 1'b1;
 					end
 				hit:
 					begin
-						point = point + 1'd1;
-						start_checks = 1'b0;
-						start_clock = 1'b0;
+						point <= point + 1'b1;
 					end
 				missed:
 					begin
-						//point = point - 1'd1;
-						start_checks = 1'b0;
-						start_clock = 1'b0;
+						//point <= 1'b0;
 					end
 				finish:
 					begin
@@ -131,12 +137,16 @@ always@(posedge clk or posedge rst)
 					begin
 						done <= 1'b0;
 					end
+				reset_state:
+					begin
+						start_checks <= 1'b0;
+						start_clock <= 1'b0;
+					end
 		endcase
 			
 	end
 	
-seven_segment ones(point%10, sevsegones);
-seven_segment tens(point/10, sevsegtens);
+
 
 	
 	
