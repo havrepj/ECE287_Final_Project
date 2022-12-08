@@ -1,5 +1,4 @@
 module final_project(
-
 	input clk,
 	input rst,
 	input start,
@@ -10,7 +9,8 @@ module final_project(
 	output reg [3:0] lights,
 	output reg done,
 	output reg [6:0]sevsegones,
-	output reg [6:0]sevsegtens
+	output reg [6:0]sevsegtens,
+	output reg [3:0]point
 );
 
 reg [3:0] S;
@@ -18,11 +18,13 @@ reg [3:0] NS;
 reg [1:0]give_lose_point;
 wire [3:0]random_gen;
 reg [1:0]random_num;
-reg [3:0] point;
+//reg [3:0] point;
+wire [3:0] temporary_point;
 reg start_checks;
 reg start_clock;
 reg clock_done;
-reg button_down;
+wire button_down;
+reg up_down;
 
 parameter START = 4'b0000,
 			 Gen_Num = 4'b0001,
@@ -35,10 +37,12 @@ parameter START = 4'b0000,
 			 
 			 
 lfsr random_num_gen(random_gen, clk, rst);			 
-check_hit checker(random_num, start_checks, clk, rst, button1, button2, button3, button4, lights, give_lose_point, clock_done, button_down);
+check_hit checker(random_num, start_checks, clk, rst, button1, button2, button3, button4, lights, give_lose_point, clock_done);
 timer timing(clk, start_clock, clock_done);
-seven_segment ones(point%10, sevsegones);
-seven_segment tens(point/10, sevsegtens);
+add_point addpoint(clk, rst, up_down, temporary_point);
+button_being_pressed(clk, button1, button2, button3, button4, button_down);
+seven_segment ones(clk, rst, temporary_point%10, sevsegones);
+seven_segment tens(clk, rst, temporary_point/10, sevsegtens);
 
 always @(posedge clk or posedge rst)
 begin
@@ -73,15 +77,12 @@ always@(*)
 				end
 			hit:
 				begin
-					//if(point == 2'd10)
-					//	NS = finish;
-					//else
-					if (button_down == 1'b0)
+					//if (button_down == 1'b0)
 						NS = reset_state;
 				end
 			missed:
 				begin
-					if (button_down == 1'b0)
+					//if (button_down == 1'b0)
 						NS = reset_state;
 				end
 			finish:
@@ -110,6 +111,7 @@ always@(posedge clk or posedge rst)
 						start_checks <= 1'b0;
 						start_clock <= 1'b0;
 						done <= 1'b0;
+						up_down <= 1'b0;
 					end
 				Gen_Num:
 					begin
@@ -123,11 +125,11 @@ always@(posedge clk or posedge rst)
 					end
 				hit:
 					begin
-						point <= point + 1'b1;
+						up_down <= 1'b1;
 					end
 				missed:
 					begin
-						//point <= 1'b0;
+
 					end
 				finish:
 					begin
@@ -141,6 +143,8 @@ always@(posedge clk or posedge rst)
 					begin
 						start_checks <= 1'b0;
 						start_clock <= 1'b0;
+						up_down <= 1'b0;
+						
 					end
 		endcase
 			

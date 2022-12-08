@@ -1,4 +1,6 @@
 module seven_segment (
+input clk,
+input rst,
 input [3:0]in,
 output reg [6:0]out
 );
@@ -14,8 +16,14 @@ output reg [6:0]out
 // e       c
 // |       |
 //  ---d---
-	always @(*)
+	always @(posedge clk or posedge rst)
 	begin
+		if (rst == 1'b1)
+			begin
+				out = ~7'b1111110;
+			end
+		else
+			begin
 			case (in)	    // abcdefg
 				4'h0: out = ~7'b1111110;
 				4'h1: out = ~7'b0110000;
@@ -37,6 +45,7 @@ output reg [6:0]out
 				default: out = ~7'b1001111;
 			
 			endcase
+			end
 		end
 
 endmodule
