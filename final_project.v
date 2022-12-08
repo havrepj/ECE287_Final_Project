@@ -15,15 +15,14 @@ module final_project(
 
 reg [3:0] S;
 reg [3:0] NS;
-reg give_point;
-reg lose_point;
+reg [1:0]give_lose_point;
 wire [3:0]random_gen;
 reg [1:0]random_num;
 reg [3:0] point;
 reg start_checks;
 reg start_clock;
 reg clock_done;
-
+reg button_down;
 
 parameter START = 4'b0000,
 			 Gen_Num = 4'b0001,
@@ -36,7 +35,7 @@ parameter START = 4'b0000,
 			 
 			 
 lfsr random_num_gen(random_gen, clk, rst);			 
-check_hit checker(random_num, start_checks, clk, button1, button2, button3, button4, lights, give_point, lose_point, clock_done);
+check_hit checker(random_num, start_checks, clk, rst, button1, button2, button3, button4, lights, give_lose_point, clock_done, button_down);
 timer timing(clk, start_clock, clock_done);
 seven_segment ones(point%10, sevsegones);
 seven_segment tens(point/10, sevsegtens);
@@ -67,9 +66,9 @@ always@(*)
 				NS = Wait;
 			Wait:
 				begin
-					if(give_point == 1'b1)
+					if(give_lose_point == 2'b11)
 						NS = hit;
-					else if (lose_point == 1'b1)
+					else if (give_lose_point == 2'b01)
 						NS = missed;
 				end
 			hit:
@@ -77,11 +76,12 @@ always@(*)
 					//if(point == 2'd10)
 					//	NS = finish;
 					//else
+					if (button_down == 1'b0)
 						NS = reset_state;
 				end
 			missed:
 				begin
-
+					if (button_down == 1'b0)
 						NS = reset_state;
 				end
 			finish:
@@ -145,7 +145,6 @@ always@(posedge clk or posedge rst)
 		endcase
 			
 	end
-	
 
 
 	
