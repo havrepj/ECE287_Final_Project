@@ -40,7 +40,7 @@ lfsr random_num_gen(random_gen, clk, rst);
 check_hit checker(random_num, start_checks, clk, rst, button1, button2, button3, button4, lights, give_lose_point, clock_done);
 timer timing(clk, start_clock, clock_done);
 add_point addpoint(clk, rst, up_down, temporary_point);
-button_being_pressed(clk, button1, button2, button3, button4, button_down);
+button_being_pressed button_press(clk, button1, button2, button3, button4, button_down);
 seven_segment ones(clk, rst, temporary_point%10, sevsegones);
 seven_segment tens(clk, rst, temporary_point/10, sevsegtens);
 
